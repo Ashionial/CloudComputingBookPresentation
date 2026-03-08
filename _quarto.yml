@@ -2,7 +2,8 @@ project:
   type: book
 
 book:
-  title: "我们的开源教科书"
+  title: "《云端创世：从一行代码到游戏纪元》"
+  author: "GuoLab 成员"
   chapters:
     - index.qmd
 
