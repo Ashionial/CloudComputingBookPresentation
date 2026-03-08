@@ -1,0 +1,7 @@
+# 欢迎阅读
+
+这是由GuoLab成员编写的教科书。由于高质量排版的需要，目前主要以 PDF 形式呈现。
+
+👉 [点击此处下载或全屏查看最新版 PDF](https://github.com/Ashionial/CloudComputingBook/releases/download/v1.0.0/Cloud_Computing_Practice.pdf)
+
+<iframe src="【https://github.com/Ashionial/CloudComputingBook/releases/download/v1.0.0/Cloud_Computing_Practice.pdf】" width="100%" height="800px" style="border: 1px solid #ccc; border-radius: 8px;"></iframe>

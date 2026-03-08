@@ -1,0 +1,12 @@
+project:
+  type: book
+
+book:
+  title: "我们的开源教科书"
+  chapters:
+    - index.qmd
+
+format:
+  html:
+    theme: cosmo
+    toc: false
