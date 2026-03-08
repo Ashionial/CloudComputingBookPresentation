@@ -13,9 +13,44 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      # 第一步：安装必要的优化工具 (Ghostscript 和 qpdf)
+      - name: Install PDF Optimization Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ghostscript qpdf
+
+      # 第二步：全自动压缩并线性化所有章节 PDF
+      - name: Optimize PDFs for Web
+        run: |
+          # 进入存放章节的文件夹
+          cd chapters
+          
+          # 遍历文件夹下所有的 pdf 文件
+          for file in *.pdf; do
+            echo "正在优化: $file ..."
+            
+            # 1. 使用 Ghostscript 进行压缩 (使用 /ebook 级别，平衡清晰度与体积)
+            gs -sDEVICE=pdfwrite \
+               -dCompatibilityLevel=1.4 \
+               -dPDFSETTINGS=/ebook \
+               -dNOPAUSE -dQUIET -dBATCH \
+               -sOutputFile=temp_compressed.pdf "$file"
+            
+            # 2. 使用 qpdf 进行线性化处理 (实现网页秒开)
+            qpdf --linearize temp_compressed.pdf "optimized_$file"
+            
+            # 3. 用优化后的文件覆盖原文件，并清理临时文件
+            mv "optimized_$file" "$file"
+            rm temp_compressed.pdf
+            
+            echo "$file 优化完成！"
+          done
+
+      # 第三步：安装 Quarto 环境
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 
+      # 第四步：渲染并发布到 GitHub Pages
       - name: Render and Publish
         uses: quarto-dev/quarto-actions/publish@v2
         with:
