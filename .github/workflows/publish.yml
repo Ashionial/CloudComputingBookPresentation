@@ -1,59 +1,59 @@
+name: LaTeX 自动化编译测试 (不发布线上)
+
+# 规则 1：只在推送代码到 test-latex-build 分支时触发
 on:
   push:
-    branches: main
-
-name: Quarto Publish
+    branches: test-latex-build
 
 jobs:
-  build-deploy:
+  test-build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    
     steps:
-      - name: Check out repository
+      - name: 检出代码
         uses: actions/checkout@v4
 
-      # 第一步：安装必要的优化工具 (Ghostscript 和 qpdf)
-      - name: Install PDF Optimization Tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ghostscript qpdf
+      # 阶段一：云端编译 LaTeX
+      - name: 编译 LaTeX 生成 PDF
+        uses: xu-cheng/latex-action@v3
+        with:
+          working_directory: latex_src
+          root_file: |
+            CCBook/main.tex
+            CCBook/pdf_export/export_chapter_toc.tex
+            CCBook/pdf_export/export_chapter_intro.tex
+            CCBook/pdf_export/export_chapter_1.tex
+            CCBook/pdf_export/export_chapter_2.tex
+            CCBook/pdf_export/export_chapter_3.tex
+            CCBook/pdf_export/export_chapter_4.tex
+            CCBook/pdf_export/export_chapter_5.tex
+            CCBook/pdf_export/export_chapter_6.tex
+          compiler: xelatex
 
-      # 第二步：全自动压缩并线性化所有章节 PDF
-      - name: Optimize PDFs for Web
+      # 阶段二：压缩与线性化
+      - name: 安装优化工具
+        run: sudo apt-get update && sudo apt-get install -y ghostscript qpdf
+
+      - name: 批量优化所有生成的 PDF
         run: |
-          # 进入存放章节的文件夹
-          cd chapters
-          
-          # 遍历文件夹下所有的 pdf 文件
+          cd latex_src
           for file in *.pdf; do
-            echo "正在优化: $file ..."
-            
-            # 1. 使用 Ghostscript 进行压缩 (使用 /ebook 级别，平衡清晰度与体积)
-            gs -sDEVICE=pdfwrite \
-               -dCompatibilityLevel=1.4 \
-               -dPDFSETTINGS=/ebook \
-               -dNOPAUSE -dQUIET -dBATCH \
-               -sOutputFile=temp_compressed.pdf "$file"
-            
-            # 2. 使用 qpdf 进行线性化处理 (实现网页秒开)
-            qpdf --linearize temp_compressed.pdf "optimized_$file"
-            
-            # 3. 用优化后的文件覆盖原文件，并清理临时文件
-            mv "optimized_$file" "$file"
-            rm temp_compressed.pdf
-            
-            echo "$file 优化完成！"
+            echo "正在优化: $file"
+            gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/ebook -dNOPAUSE -dQUIET -dBATCH -sOutputFile=temp.pdf "$file"
+            qpdf --linearize temp.pdf "../$file"  # 移动到根目录
+            rm temp.pdf
           done
 
-      # 第三步：安装 Quarto 环境
-      - name: Set up Quarto
+      # 阶段三：Quarto 仅渲染网页 (拦截发布)
+      - name: 安装 Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 
-      # 第四步：渲染并发布到 GitHub Pages
-      - name: Render and Publish
-        uses: quarto-dev/quarto-actions/publish@v2
+      - name: 渲染网页 (Render Only)
+        run: quarto render  # 注意这里：只生成静态文件，不推送到 gh-pages！
+
+      # 阶段四：打包最终产物供您下载预览
+      - name: 上传网站产物 (Artifact)
+        uses: actions/upload-artifact@v4
         with:
-          target: gh-pages
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: test-website-preview
+          path: _site/  # Quarto 默认将生成的网页和PDF都放在 _site 文件夹下
