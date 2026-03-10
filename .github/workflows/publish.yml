@@ -17,17 +17,16 @@ jobs:
       - name: 编译 LaTeX 生成 PDF
         uses: xu-cheng/latex-action@v3
         with:
-          working_directory: latex_src
+          working_directory: CCBook/pdf_export
           root_file: |
-            CCBook/main.tex
-            CCBook/pdf_export/export_chapter_toc.tex
-            CCBook/pdf_export/export_chapter_intro.tex
-            CCBook/pdf_export/export_chapter_1.tex
-            CCBook/pdf_export/export_chapter_2.tex
-            CCBook/pdf_export/export_chapter_3.tex
-            CCBook/pdf_export/export_chapter_4.tex
-            CCBook/pdf_export/export_chapter_5.tex
-            CCBook/pdf_export/export_chapter_6.tex
+            export_chapter_toc.tex
+            export_chapter_intro.tex
+            export_chapter_1.tex
+            export_chapter_2.tex
+            export_chapter_3.tex
+            export_chapter_4.tex
+            export_chapter_5.tex
+            export_chapter_6.tex
           compiler: xelatex
 
       # 阶段二：压缩与线性化
