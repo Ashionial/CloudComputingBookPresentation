@@ -19,7 +19,7 @@ jobs:
           working_directory: CCBook
           root_file: main.tex
           compiler: xelatex
-          args: -xelatex -file-line-error -interaction=nonstopmode -f
+          pre_compile: "xelatex -interaction=nonstopmode main.tex || true"
 
       - name: 独立编译各章节 PDF
         uses: xu-cheng/latex-action@v3
