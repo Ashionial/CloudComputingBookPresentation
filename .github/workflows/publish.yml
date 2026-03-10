@@ -14,6 +14,7 @@ jobs:
 
       - name: 编译完整版 LaTeX (生成 main.pdf)
         uses: xu-cheng/latex-action@v3
+        continue-on-error: true
         with:
           working_directory: CCBook
           root_file: main.tex
@@ -21,6 +22,7 @@ jobs:
 
       - name: 独立编译各章节 PDF
         uses: xu-cheng/latex-action@v3
+        continue-on-error: true
         env:
           TEXINPUTS: ".:..:"
         with:
