@@ -1,6 +1,5 @@
 name: LaTeX 自动化编译测试 (不发布线上)
 
-# 规则 1：只在推送代码到 test-latex-build 分支时触发
 on:
   push:
     branches: test-latex-build
@@ -13,13 +12,12 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
-      # 阶段一：云端编译 LaTeX
       - name: 编译 LaTeX 生成 PDF
         uses: xu-cheng/latex-action@v3
         with:
           working_directory: CCBook/pdf_export
           root_file: |
-            export_chapter_toc.tex
+            export_toc.tex
             export_chapter_intro.tex
             export_chapter_1.tex
             export_chapter_2.tex
@@ -29,30 +27,33 @@ jobs:
             export_chapter_6.tex
           compiler: xelatex
 
-      # 阶段二：压缩与线性化
       - name: 安装优化工具
         run: sudo apt-get update && sudo apt-get install -y ghostscript qpdf
 
       - name: 批量优化所有生成的 PDF
         run: |
-          cd latex_src
+          cd CCBook/pdf_export
+          
+          mkdir -p ../../test_output_pdfs
+          
           for file in *.pdf; do
             echo "正在优化: $file"
             gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/ebook -dNOPAUSE -dQUIET -dBATCH -sOutputFile=temp.pdf "$file"
-            qpdf --linearize temp.pdf "../$file"  # 移动到根目录
+            
+            qpdf --linearize temp.pdf "../../test_output_pdfs/$file" 
             rm temp.pdf
           done
 
-      # 阶段三：Quarto 仅渲染网页 (拦截发布)
       - name: 安装 Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 
       - name: 渲染网页 (Render Only)
-        run: quarto render  # 注意这里：只生成静态文件，不推送到 gh-pages！
+        run: quarto render
 
-      # 阶段四：打包最终产物供您下载预览
-      - name: 上传网站产物 (Artifact)
+      - name: 上传网站产物与新生成的 PDF (Artifact)
         uses: actions/upload-artifact@v4
         with:
-          name: test-website-preview
-          path: _site/  # Quarto 默认将生成的网页和PDF都放在 _site 文件夹下
+          name: test-website-and-pdfs
+          path: |
+            _site/
+            test_output_pdfs/
