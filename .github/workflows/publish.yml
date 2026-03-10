@@ -12,14 +12,20 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
-      - name: 编译 LaTeX 生成 PDF
+      - name: 编译完整版 LaTeX (生成 main.pdf)
+        uses: xu-cheng/latex-action@v3
+        with:
+          working_directory: CCBook
+          root_file: main.tex
+          compiler: xelatex
+
+      - name: 独立编译各章节 PDF
         uses: xu-cheng/latex-action@v3
         env:
           TEXINPUTS: ".:..:"
         with:
           working_directory: CCBook/pdf_export
           root_file: |
-            export_toc.tex
             export_chapter_intro.tex
             export_chapter_1.tex
             export_chapter_2.tex
@@ -32,17 +38,20 @@ jobs:
       - name: 安装优化工具
         run: sudo apt-get update && sudo apt-get install -y ghostscript qpdf
 
-      - name: 批量优化所有生成的 PDF
+      - name: 提取目录与批量优化
         run: |
-          cd CCBook/pdf_export
+          mkdir -p test_output_pdfs
           
-          mkdir -p ../../test_output_pdfs
+          qpdf --empty --pages CCBook/main.pdf 1-6 -- test_output_pdfs/export_toc.pdf
           
+          mv CCBook/pdf_export/*.pdf test_output_pdfs/
+          
+          cd test_output_pdfs
           for file in *.pdf; do
             echo "正在优化: $file"
             gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/ebook -dNOPAUSE -dQUIET -dBATCH -sOutputFile=temp.pdf "$file"
-            
-            qpdf --linearize temp.pdf "../../test_output_pdfs/$file" 
+            qpdf --linearize temp.pdf "optimized_$file"
+            mv "optimized_$file" "$file"
             rm temp.pdf
           done
 
@@ -52,7 +61,7 @@ jobs:
       - name: 渲染网页 (Render Only)
         run: quarto render
 
-      - name: 上传网站产物与新生成的 PDF (Artifact)
+      - name: 上传网站产物与新生成的 PDF
         uses: actions/upload-artifact@v4
         with:
           name: test-website-and-pdfs
